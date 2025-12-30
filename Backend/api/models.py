@@ -117,3 +117,53 @@ class Attraction(models.Model):
     def __str__(self):
         return self.name
 
+
+# Helpline Models
+
+class HelplineCategory(models.Model):
+    """Categories for helplines (e.g., Hospital, Police, Ambulance)"""
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    icon = models.CharField(max_length=50, blank=True, help_text="Icon name or emoji")
+    priority = models.IntegerField(default=0, help_text="Higher priority shows first")
+
+    class Meta:
+        verbose_name_plural = "Helpline Categories"
+        ordering = ['-priority', 'name']
+
+    def __str__(self):
+        return self.name
+
+
+class Helpline(models.Model):
+    """Emergency helpline numbers in Chennai"""
+    name = models.CharField(max_length=255)
+    category = models.ForeignKey(HelplineCategory, on_delete=models.CASCADE, related_name='helplines')
+    area = models.ForeignKey(Area, on_delete=models.SET_NULL, null=True, blank=True, related_name='helplines')
+
+    # Contact details
+    phone_number = models.CharField(max_length=20)
+    alternate_number = models.CharField(max_length=20, blank=True)
+    email = models.EmailField(blank=True)
+
+    # Location details
+    address = models.TextField(blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
+    # Additional info
+    description = models.TextField(blank=True, help_text="Additional information about the service")
+    timings = models.CharField(max_length=200, blank=True, help_text="e.g., '24/7' or '9 AM - 5 PM'")
+    is_emergency = models.BooleanField(default=False, help_text="24/7 emergency service")
+    is_toll_free = models.BooleanField(default=False)
+
+    # Metadata
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_emergency', 'category__priority', 'name']
+
+    def __str__(self):
+        return f"{self.name} - {self.phone_number}"
+

@@ -18,7 +18,7 @@ import csv
 from .models import Event,Location
 from datetime import datetime
 
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_yasg.utils import swagger_auto_schema
@@ -209,11 +209,11 @@ class TourismCategoryListView(generics.ListAPIView):
     serializer_class = TourismCategorySerializer
 
 
-@permission_classes([IsAuthenticated])
 class AreaListView(generics.ListAPIView):
-    """List all areas in Chennai"""
+    """List all areas in Chennai - publicly accessible (used by helpline filters)"""
     queryset = Area.objects.all()
     serializer_class = AreaSerializer
+    permission_classes = [AllowAny]
 
 
 @permission_classes([IsAuthenticated])
@@ -242,3 +242,47 @@ class FeaturedAttractionsView(generics.ListAPIView):
     queryset = Attraction.objects.filter(is_featured=True)
     serializer_class = AttractionListSerializer
     ordering = ['name']
+
+
+# Helpline Views
+
+from .models import HelplineCategory, Helpline
+from .serializers import (
+    HelplineCategorySerializer,
+    HelplineListSerializer,
+    HelplineDetailSerializer
+)
+
+class HelplineCategoryListView(generics.ListAPIView):
+    """List all helpline categories - publicly accessible"""
+    queryset = HelplineCategory.objects.all()
+    serializer_class = HelplineCategorySerializer
+    permission_classes = [AllowAny]
+
+
+class HelplineListView(generics.ListAPIView):
+    """List all helplines with filtering options - publicly accessible"""
+    queryset = Helpline.objects.all()
+    serializer_class = HelplineListSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['category', 'area', 'is_emergency']
+    search_fields = ['name', 'description', 'phone_number']
+    ordering_fields = ['name', 'category__priority', 'is_emergency']
+    ordering = ['-is_emergency', '-category__priority', 'name']
+    permission_classes = [AllowAny]
+
+
+class HelplineDetailView(generics.RetrieveAPIView):
+    """Get detailed information about a specific helpline - publicly accessible"""
+    queryset = Helpline.objects.all()
+    serializer_class = HelplineDetailSerializer
+    lookup_field = 'id'
+    permission_classes = [AllowAny]
+
+
+class EmergencyHelplinesView(generics.ListAPIView):
+    """List only emergency (24/7) helplines - publicly accessible"""
+    queryset = Helpline.objects.filter(is_emergency=True)
+    serializer_class = HelplineListSerializer
+    ordering = ['-category__priority', 'name']
+    permission_classes = [AllowAny]

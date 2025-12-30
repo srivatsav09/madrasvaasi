@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ForumPost, Comment, Event, Location, TourismCategory, Area, Attraction
+from .models import ForumPost, Comment, Event, Location, TourismCategory, Area, Attraction, HelplineCategory, Helpline
 
 # serializers.py
 
@@ -107,4 +107,46 @@ class AttractionDetailSerializer(serializers.ModelSerializer):
             'address', 'latitude', 'longitude', 'image_url', 'website',
             'entry_fee', 'timings', 'best_time_to_visit', 'is_featured',
             'created_at', 'updated_at'
+        )
+
+
+# Helpline Serializers
+
+class HelplineCategorySerializer(serializers.ModelSerializer):
+    helpline_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = HelplineCategory
+        fields = ('id', 'name', 'description', 'icon', 'priority', 'helpline_count')
+
+    def get_helpline_count(self, obj):
+        return obj.helplines.count()
+
+
+class HelplineListSerializer(serializers.ModelSerializer):
+    """Simplified serializer for list views"""
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    category_icon = serializers.CharField(source='category.icon', read_only=True)
+    area_name = serializers.CharField(source='area.name', read_only=True)
+
+    class Meta:
+        model = Helpline
+        fields = (
+            'id', 'name', 'category', 'category_name', 'category_icon',
+            'area', 'area_name', 'phone_number', 'alternate_number',
+            'address', 'timings', 'is_emergency', 'is_toll_free'
+        )
+
+
+class HelplineDetailSerializer(serializers.ModelSerializer):
+    """Detailed serializer with all information"""
+    category = HelplineCategorySerializer(read_only=True)
+    area = AreaSerializer(read_only=True)
+
+    class Meta:
+        model = Helpline
+        fields = (
+            'id', 'name', 'category', 'area', 'phone_number', 'alternate_number',
+            'email', 'address', 'latitude', 'longitude', 'description',
+            'timings', 'is_emergency', 'is_toll_free', 'created_at', 'updated_at'
         )

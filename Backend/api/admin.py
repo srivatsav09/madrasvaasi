@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Location, ForumPost, Comment, Event, TourismCategory, Area, Attraction
+from .models import Location, ForumPost, Comment, Event, TourismCategory, Area, Attraction, HelplineCategory, Helpline
 
 @admin.register(Location)
 class LocationAdmin(admin.ModelAdmin):
@@ -79,5 +79,45 @@ class AttractionAdmin(admin.ModelAdmin):
         }),
         ('Settings', {
             'fields': ('is_featured', 'created_at', 'updated_at')
+        }),
+    )
+
+
+# Helpline Admin
+
+@admin.register(HelplineCategory)
+class HelplineCategoryAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'icon', 'priority', 'get_helpline_count')
+    search_fields = ('name',)
+    list_editable = ('priority',)
+
+    def get_helpline_count(self, obj):
+        return obj.helplines.count()
+    get_helpline_count.short_description = 'Helplines'
+
+
+@admin.register(Helpline)
+class HelplineAdmin(admin.ModelAdmin):
+    list_display = ('id', 'name', 'category', 'area', 'phone_number', 'is_emergency', 'is_toll_free')
+    list_filter = ('category', 'area', 'is_emergency', 'is_toll_free')
+    search_fields = ('name', 'description', 'phone_number', 'address')
+    list_editable = ('is_emergency',)
+    readonly_fields = ('created_at', 'updated_at')
+
+    fieldsets = (
+        ('Basic Information', {
+            'fields': ('name', 'category', 'area', 'description')
+        }),
+        ('Contact Details', {
+            'fields': ('phone_number', 'alternate_number', 'email')
+        }),
+        ('Location', {
+            'fields': ('address', 'latitude', 'longitude')
+        }),
+        ('Service Information', {
+            'fields': ('timings', 'is_emergency', 'is_toll_free')
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at')
         }),
     )
