@@ -190,3 +190,55 @@ class LocationPostCountView(APIView):
         return Response(serializer.data)
 
 
+# Tourism Views
+
+from .models import TourismCategory, Area, Attraction
+from .serializers import (
+    TourismCategorySerializer,
+    AreaSerializer,
+    AttractionListSerializer,
+    AttractionDetailSerializer
+)
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+
+@permission_classes([IsAuthenticated])
+class TourismCategoryListView(generics.ListAPIView):
+    """List all tourism categories"""
+    queryset = TourismCategory.objects.all()
+    serializer_class = TourismCategorySerializer
+
+
+@permission_classes([IsAuthenticated])
+class AreaListView(generics.ListAPIView):
+    """List all areas in Chennai"""
+    queryset = Area.objects.all()
+    serializer_class = AreaSerializer
+
+
+@permission_classes([IsAuthenticated])
+class AttractionListView(generics.ListAPIView):
+    """List all attractions with filtering options"""
+    queryset = Attraction.objects.all()
+    serializer_class = AttractionListSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['category', 'area', 'is_featured']
+    search_fields = ['name', 'description', 'short_description']
+    ordering_fields = ['name', 'created_at', 'is_featured']
+    ordering = ['-is_featured', 'name']
+
+
+@permission_classes([IsAuthenticated])
+class AttractionDetailView(generics.RetrieveAPIView):
+    """Get detailed information about a specific attraction"""
+    queryset = Attraction.objects.all()
+    serializer_class = AttractionDetailSerializer
+    lookup_field = 'id'
+
+
+@permission_classes([IsAuthenticated])
+class FeaturedAttractionsView(generics.ListAPIView):
+    """List only featured/popular attractions"""
+    queryset = Attraction.objects.filter(is_featured=True)
+    serializer_class = AttractionListSerializer
+    ordering = ['name']

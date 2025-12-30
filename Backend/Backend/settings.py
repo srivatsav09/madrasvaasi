@@ -44,7 +44,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "events",
-    "drf_yasg"
+    "drf_yasg",
+    "django_filters",
 ]
 
 REST_FRAMEWORK = {
