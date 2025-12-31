@@ -2,6 +2,17 @@ import { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import axios from 'axios';
 import { useAuth } from '../AuthContext';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default marker icons in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const Helpline = () => {
   const [helplines, setHelplines] = useState([]);
@@ -63,6 +74,8 @@ const Helpline = () => {
 
         const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
         const response = await axios.get(url, config);
+        console.log('Helplines received:', response.data);
+        console.log('First helpline:', response.data[0]);
         setHelplines(response.data);
       } catch (error) {
         console.error('Error fetching helplines:', error);
@@ -182,6 +195,83 @@ const Helpline = () => {
           </div>
         </div>
 
+        {/* Map Section */}
+        <div className='mb-12'>
+          <h2 className="text-white text-3xl font-bold mb-6">Locate Helplines on Map</h2>
+          <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl overflow-hidden border border-white border-opacity-30">
+            <MapContainer
+              center={[13.0827, 80.2707]}
+              zoom={12}
+              style={{ height: '500px', width: '100%' }}
+              scrollWheelZoom={true}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {helplines
+                .filter(h => {
+                  const hasCoords = h.latitude && h.longitude;
+                  if (hasCoords) console.log('Rendering marker for:', h.name, h.latitude, h.longitude);
+                  return hasCoords;
+                })
+                .map((helpline) => (
+                  <Marker
+                    key={helpline.id}
+                    position={[parseFloat(helpline.latitude), parseFloat(helpline.longitude)]}
+                  >
+                    <Popup>
+                      <div className="text-gray-900">
+                        <div className='flex items-center gap-2 mb-2'>
+                          <span className='text-2xl'>{helpline.category_icon}</span>
+                          <h3 className="font-bold text-lg">{helpline.name}</h3>
+                        </div>
+                        <div className="text-sm space-y-1 mb-3">
+                          <p><strong>Category:</strong> {helpline.category_name}</p>
+                          {helpline.area_name && <p><strong>Area:</strong> {helpline.area_name}</p>}
+                          <p className="text-lg font-bold text-blue-600">📞 {helpline.phone_number}</p>
+                          {helpline.alternate_number && (
+                            <p className="text-sm">Alt: {helpline.alternate_number}</p>
+                          )}
+                          {helpline.address && <p><strong>Address:</strong> {helpline.address}</p>}
+                          {helpline.timings && <p><strong>Timings:</strong> {helpline.timings}</p>}
+                          <div className='flex gap-2 mt-2'>
+                            {helpline.is_emergency && (
+                              <span className='bg-red-500 text-white text-xs px-2 py-1 rounded'>
+                                Emergency 24/7
+                              </span>
+                            )}
+                            {helpline.is_toll_free && (
+                              <span className='bg-green-500 text-white text-xs px-2 py-1 rounded'>
+                                Toll Free
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <a
+                            href={`tel:${helpline.phone_number}`}
+                            className="inline-block bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 transition"
+                          >
+                            📞 Call Now
+                          </a>
+                          <a
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${helpline.latitude},${helpline.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-block bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition"
+                          >
+                            🗺️ Get Directions
+                          </a>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+            </MapContainer>
+          </div>
+        </div>
+
         {/* Loading Indicator */}
         {loading && (
           <div className="flex justify-center py-12">
@@ -248,7 +338,7 @@ const Helpline = () => {
                       </div>
                     )}
 
-                    <div className='flex gap-2 mt-3'>
+                    <div className='flex gap-2 mt-3 mb-3'>
                       {helpline.is_emergency && (
                         <span className='bg-red-500 text-white text-xs px-2 py-1 rounded'>
                           Emergency 24/7
@@ -260,6 +350,17 @@ const Helpline = () => {
                         </span>
                       )}
                     </div>
+
+                    {(helpline.latitude && helpline.longitude) && (
+                      <a
+                        href={`https://www.google.com/maps/dir/?api=1&destination=${helpline.latitude},${helpline.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className='block w-full bg-blue-500 text-white text-center py-2.5 rounded-lg text-sm font-bold hover:bg-blue-600 transition mt-2'
+                      >
+                        🗺️ Get Directions
+                      </a>
+                    )}
                   </div>
                 </div>
               ))}

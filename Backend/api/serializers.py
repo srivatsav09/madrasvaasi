@@ -134,7 +134,8 @@ class HelplineListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'category', 'category_name', 'category_icon',
             'area', 'area_name', 'phone_number', 'alternate_number',
-            'address', 'timings', 'is_emergency', 'is_toll_free'
+            'address', 'timings', 'is_emergency', 'is_toll_free',
+            'latitude', 'longitude'
         )
 
 

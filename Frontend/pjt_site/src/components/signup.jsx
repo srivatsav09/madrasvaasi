@@ -97,13 +97,13 @@ const Signup = () => {
             console.log("your token: ",response.data);  // Log the response data for debugging
             if (response.status === 201) {
                 console.log('Signup successful!');
-                // Set the token in the context
-                setToken(response.data.token);
+                // Set the access token in the context
+                setToken(response.data.access);
                 // Redirect the user to the homepage
                 navigate('/');
             } else {
                 console.log('Signup failed. Server returned:', response.status, response.data);
-                // Handle the case where login failed
+                // Handle the case where signup failed
             }
             // Handle the response data or redirect the user as needed
         } catch (error) {

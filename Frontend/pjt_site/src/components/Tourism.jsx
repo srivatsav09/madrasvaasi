@@ -3,6 +3,17 @@ import touris from '../assets/touris.jpg';
 import Navbar from './Navbar';
 import axios from 'axios';
 import { useAuth } from '../AuthContext';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix for default marker icons in Leaflet
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
 
 const Tourism = () => {
   const [attractions, setAttractions] = useState([]);
@@ -131,6 +142,59 @@ const Tourism = () => {
           ))}
         </div>
 
+        {/* Map Section */}
+        <div className="text-white text-[40px] pl-[4rem] pt-[3rem] font-extrabold font-['League Spartan']">
+          EXPLORE ON MAP
+        </div>
+        <div className="text-white text-[20px] pl-[4rem] font-extralight font-['League Spartan']">
+          View all attractions on an interactive map
+        </div>
+
+        <div className="px-16 mt-6">
+          <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl overflow-hidden border border-white border-opacity-30">
+            <MapContainer
+              center={[13.0827, 80.2707]}
+              zoom={12}
+              style={{ height: '500px', width: '100%' }}
+              scrollWheelZoom={true}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              {attractions
+                .filter(attr => attr.latitude && attr.longitude)
+                .map((attraction) => (
+                  <Marker
+                    key={attraction.id}
+                    position={[parseFloat(attraction.latitude), parseFloat(attraction.longitude)]}
+                  >
+                    <Popup>
+                      <div className="text-gray-900">
+                        <h3 className="font-bold text-lg mb-1">{attraction.name}</h3>
+                        <p className="text-sm mb-2">{attraction.short_description}</p>
+                        <div className="text-xs space-y-1 mb-2">
+                          <p><strong>Category:</strong> {attraction.category_name}</p>
+                          {attraction.area_name && <p><strong>Area:</strong> {attraction.area_name}</p>}
+                          {attraction.entry_fee && <p><strong>Entry Fee:</strong> ₹{attraction.entry_fee}</p>}
+                          {attraction.timings && <p><strong>Timings:</strong> {attraction.timings}</p>}
+                        </div>
+                        <a
+                          href={`https://www.google.com/maps/dir/?api=1&destination=${attraction.latitude},${attraction.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-block bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition"
+                        >
+                          🗺️ Get Directions
+                        </a>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+            </MapContainer>
+          </div>
+        </div>
+
         {/* Filters Section */}
         <div className="text-white text-[40px] pl-[4rem] pt-[3rem] font-extrabold font-['League Spartan']">
           ALL ATTRACTIONS IN CHENNAI
@@ -191,7 +255,7 @@ const Tourism = () => {
                 <div className='p-4'>
                   <h3 className='text-white font-bold text-lg mb-1 truncate'>{attraction.name}</h3>
                   <p className='text-gray-200 text-xs mb-2 line-clamp-2'>{attraction.short_description}</p>
-                  <div className='flex flex-col gap-1 text-white text-xs'>
+                  <div className='flex flex-col gap-1 text-white text-xs mb-3'>
                     <span>{attraction.category_name}</span>
                     {attraction.entry_fee && (
                       <span className='text-green-300'>₹ {attraction.entry_fee}</span>
@@ -200,6 +264,17 @@ const Tourism = () => {
                       <span className='text-gray-300 text-xs truncate'>{attraction.timings}</span>
                     )}
                   </div>
+                  {attraction.latitude && attraction.longitude && (
+                    <a
+                      href={`https://www.google.com/maps/dir/?api=1&destination=${attraction.latitude},${attraction.longitude}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className='block w-full bg-blue-600 text-white text-center py-2 rounded-lg text-xs font-bold hover:bg-blue-700 transition'
+                    >
+                      🗺️ Get Directions
+                    </a>
+                  )}
                 </div>
               </div>
             ))}
