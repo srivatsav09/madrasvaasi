@@ -24,4 +24,17 @@ urlpatterns = [
     path('import-csv/', views.import_events_from_csv, name='import_csv'),
     path('api/events/', views.EventListAPIView.as_view(), name='event_list_api'),
 
+    # Tourism
+    path('api/tourism/categories/', views.TourismCategoryListView.as_view(), name='tourism-categories'),
+    path('api/tourism/areas/', views.AreaListView.as_view(), name='tourism-areas'),
+    path('api/tourism/attractions/', views.AttractionListView.as_view(), name='attraction-list'),
+    path('api/tourism/attractions/<int:id>/', views.AttractionDetailView.as_view(), name='attraction-detail'),
+    path('api/tourism/featured/', views.FeaturedAttractionsView.as_view(), name='featured-attractions'),
+
+    # Helpline
+    path('api/helpline/categories/', views.HelplineCategoryListView.as_view(), name='helpline-categories'),
+    path('api/helpline/list/', views.HelplineListView.as_view(), name='helpline-list'),
+    path('api/helpline/<int:id>/', views.HelplineDetailView.as_view(), name='helpline-detail'),
+    path('api/helpline/emergency/', views.EmergencyHelplinesView.as_view(), name='emergency-helplines'),
+
 ]

@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import forumrect from '../assets/forumrect.svg';
+import { useState, useEffect } from 'react';
 import bg from '../assets/newsbg.svg';
 import '@fontsource/league-spartan';
 import Marquee from "react-fast-marquee";
 import Navbar from './Navbar';
-import line from '../assets/Line2.svg';
-import rect from '../assets/Rectangle10.svg';
 import axios from 'axios';
 import { useAuth } from '../AuthContext';
 const Forum = () => {
@@ -17,119 +14,135 @@ const Forum = () => {
   const [newComment, setNewComment] = useState([]);
   const [newPostTitle, setNewPostTitle] = useState('');
   const [newPostContent, setNewPostContent] = useState('');
-  const { token } = useAuth()
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const { token, user } = useAuth()
 
   useEffect(() => {
     const fetchLocations = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const response = await axios.get('http://127.0.0.1:8000/api/locations/', {
           headers: {
-            Authorization: `Bearer ${token}` // Set Authorization header with Bearer token
+            Authorization: `Bearer ${token}`
           }
-        }); // Replace 'YOUR_DJANGO_API_URL' with your actual API endpoint
+        });
         setLocations(response.data);
       } catch (error) {
         console.error('Error fetching locations:', error);
+        setError('Failed to load locations. Please try again.');
+      } finally {
+        setLoading(false);
       }
     };
-    fetchLocations();
-  }, []);
+    if (token) {
+      fetchLocations();
+    }
+  }, [token]);
 
   const handleButtonClick = async(locationId) => {
     try {
-      // Send locationId to Django API endpoint
+      setLoading(true);
+      setError(null);
       const response = await axios.get(`http://127.0.0.1:8000/api/locations/${locationId}/posts/`, {
         headers: {
-          Authorization: `Bearer ${token}` // Set Authorization header with Bearer token
+          Authorization: `Bearer ${token}`
         }
       });
-      console.log(response.data);
-      
-      // Set posts and location ID
+
       setPosts(response.data);
       setLocationId(locationId);
-      
-      // Iterate through posts to set comments for each post
+
+      // Fetch comments for each post
       response.data.forEach(async (post) => {
-        console.log(post.id)
         const commentsResponse = await axios.get(`http://127.0.0.1:8000/api/locations/${locationId}/posts/${post.id}/comments/`, {
           headers: {
-            Authorization: `Bearer ${token}` // Set Authorization header with Bearer token
+            Authorization: `Bearer ${token}`
           }
         });
-        console.log(commentsResponse)
-        // Set comments for the current post
         setComments((prevComments) => ({
           ...prevComments,
           [post.id]: commentsResponse.data
         }));
       });
-      // console.log(comments)
     } catch (error) {
       console.error('Error fetching posts:', error);
+      setError('Failed to load posts. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCommentSubmit = async (locationId, postId, user) => {
+  const handleCommentSubmit = async (locationId, postId, userId) => {
+    if (!newComment[postId]?.trim()) {
+      setError('Comment cannot be empty');
+      return;
+    }
+
     try {
-      console.log(locationId)
-      console.log(postId)
-      console.log(newComment)
+      setError(null);
       const data = {
-        "user":user,
-        "post":postId,
-        "content":newComment
+        "user": userId,
+        "post": postId,
+        "content": newComment[postId]
       }
-      // Submit comment to Django API
-      await axios.post(`http://127.0.0.1:8000/api/locations/${locationId}/posts/${postId}/comments/` , data, {
+      await axios.post(`http://127.0.0.1:8000/api/locations/${locationId}/posts/${postId}/comments/`, data, {
         headers: {
-          Authorization: `Bearer ${token}` // Set Authorization header with Bearer token
+          Authorization: `Bearer ${token}`
         }
       });
-      console.log("executed comment submit");
+
       const response = await axios.get(`http://127.0.0.1:8000/api/locations/${locationId}/posts/${postId}/comments/`, {
         headers: {
-          Authorization: `Bearer ${token}` // Set Authorization header with Bearer token
+          Authorization: `Bearer ${token}`
         }
       });
-      // Clear comment input
+
       setComments((prevComments) => ({
         ...prevComments,
         [postId]: response.data
       }));
-      setNewComment('');
+      setNewComment({ ...newComment, [postId]: '' });
     } catch (error) {
       console.error('Error submitting comment:', error);
-    } 
+      setError('Failed to submit comment. Please try again.');
+    }
   };
 
-  const handlePostSubmit = async (locationId,user) => {
+  const handlePostSubmit = async (locationId, userId) => {
+    if (!newPostTitle.trim() || !newPostContent.trim()) {
+      setError('Title and content are required');
+      return;
+    }
+
     try {
-      // Submit new post to Django API)
+      setError(null);
       const data = {
-        "user":user,
-        "location":locationId,
-        "title":newPostTitle,
-        "content":newPostContent,
+        "user": userId,
+        "location": locationId,
+        "title": newPostTitle,
+        "content": newPostContent,
       }
-      console.log(data);
-      console.log(user);
-      await axios.post(`http://127.0.0.1:8000/api/locations/${locationId}/posts/`, data ,{
+
+      await axios.post(`http://127.0.0.1:8000/api/locations/${locationId}/posts/`, data, {
         headers: {
-          Authorization: `Bearer ${token}` // Set Authorization header with Bearer token
+          Authorization: `Bearer ${token}`
         }
       });
-      console.log("Hey executed submit");
-      const response = await axios.get(`http://127.0.0.1:8000/api/locations/${locationId}/posts/` , {
+
+      const response = await axios.get(`http://127.0.0.1:8000/api/locations/${locationId}/posts/`, {
         headers: {
-          Authorization: `Bearer ${token}` // Set Authorization header with Bearer token
+          Authorization: `Bearer ${token}`
         }
       });
+
       setPosts(response.data);
       setNewPostTitle('');
       setNewPostContent('');
     } catch (error) {
       console.error('Error submitting post:', error);
+      setError('Failed to submit post. Please try again.');
     }
   };
 
@@ -139,6 +152,22 @@ const Forum = () => {
       <div>
         <div className="text-[110px] text-white mt-[2%] pl-[5%] absolute" style={{ fontWeight: 1000 }}> LATEST NEWS</div>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+          {error}
+          <button onClick={() => setError(null)} className="ml-4 font-bold">✕</button>
+        </div>
+      )}
+
+      {/* Loading Indicator */}
+      {loading && (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+        </div>
+      )}
+
       <Marquee speed={90} className='mt-[13%]'>
         {locations.map(location => (
           <div key={location.id} className='pl-20' style={{ position: 'relative', display: 'inline-block', marginRight: '10px' }}>
@@ -181,7 +210,7 @@ const Forum = () => {
             {/* Add comment section */}
             <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center' }}>
             <input type="text" value={newComment[post.id]} onChange={(e) => setNewComment({ ...newComment, [post.id]: e.target.value })} placeholder="Add a comment..." style={{ flex: '1', marginRight: '10px', padding: '8px', borderRadius: '5px', border: '1px solid #ccc' }} />
-            <button onClick={() => handleCommentSubmit(post.location_id, post.id,1)} style={{ padding: '8px 15px', borderRadius: '5px', backgroundColor: '#3897f0', color: '#fff', border: 'none', cursor: 'pointer' }}>Post</button>
+            <button onClick={() => handleCommentSubmit(post.location_id, post.id, user?.id)} style={{ padding: '8px 15px', borderRadius: '5px', backgroundColor: '#3897f0', color: '#fff', border: 'none', cursor: 'pointer' }}>Post</button>
             </div>
             <br />
             {/* Display comments for this post */}
@@ -211,7 +240,7 @@ const Forum = () => {
         />
         <button
           className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition duration-300"
-          onClick={() => handlePostSubmit(locationId,1)}
+          onClick={() => handlePostSubmit(locationId, user?.id)}
         >
           Add Post
         </button>

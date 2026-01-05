@@ -18,7 +18,7 @@ import csv
 from .models import Event,Location
 from datetime import datetime
 
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.decorators import permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
 from drf_yasg.utils import swagger_auto_schema
@@ -190,3 +190,99 @@ class LocationPostCountView(APIView):
         return Response(serializer.data)
 
 
+# Tourism Views
+
+from .models import TourismCategory, Area, Attraction
+from .serializers import (
+    TourismCategorySerializer,
+    AreaSerializer,
+    AttractionListSerializer,
+    AttractionDetailSerializer
+)
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.filters import SearchFilter, OrderingFilter
+
+@permission_classes([IsAuthenticated])
+class TourismCategoryListView(generics.ListAPIView):
+    """List all tourism categories"""
+    queryset = TourismCategory.objects.all()
+    serializer_class = TourismCategorySerializer
+
+
+class AreaListView(generics.ListAPIView):
+    """List all areas in Chennai - publicly accessible (used by helpline filters)"""
+    queryset = Area.objects.all()
+    serializer_class = AreaSerializer
+    permission_classes = [AllowAny]
+
+
+@permission_classes([IsAuthenticated])
+class AttractionListView(generics.ListAPIView):
+    """List all attractions with filtering options"""
+    queryset = Attraction.objects.all()
+    serializer_class = AttractionListSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['category', 'area', 'is_featured']
+    search_fields = ['name', 'description', 'short_description']
+    ordering_fields = ['name', 'created_at', 'is_featured']
+    ordering = ['-is_featured', 'name']
+
+
+@permission_classes([IsAuthenticated])
+class AttractionDetailView(generics.RetrieveAPIView):
+    """Get detailed information about a specific attraction"""
+    queryset = Attraction.objects.all()
+    serializer_class = AttractionDetailSerializer
+    lookup_field = 'id'
+
+
+@permission_classes([IsAuthenticated])
+class FeaturedAttractionsView(generics.ListAPIView):
+    """List only featured/popular attractions"""
+    queryset = Attraction.objects.filter(is_featured=True)
+    serializer_class = AttractionListSerializer
+    ordering = ['name']
+
+
+# Helpline Views
+
+from .models import HelplineCategory, Helpline
+from .serializers import (
+    HelplineCategorySerializer,
+    HelplineListSerializer,
+    HelplineDetailSerializer
+)
+
+class HelplineCategoryListView(generics.ListAPIView):
+    """List all helpline categories - publicly accessible"""
+    queryset = HelplineCategory.objects.all()
+    serializer_class = HelplineCategorySerializer
+    permission_classes = [AllowAny]
+
+
+class HelplineListView(generics.ListAPIView):
+    """List all helplines with filtering options - publicly accessible"""
+    queryset = Helpline.objects.all()
+    serializer_class = HelplineListSerializer
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['category', 'area', 'is_emergency']
+    search_fields = ['name', 'description', 'phone_number']
+    ordering_fields = ['name', 'category__priority', 'is_emergency']
+    ordering = ['-is_emergency', '-category__priority', 'name']
+    permission_classes = [AllowAny]
+
+
+class HelplineDetailView(generics.RetrieveAPIView):
+    """Get detailed information about a specific helpline - publicly accessible"""
+    queryset = Helpline.objects.all()
+    serializer_class = HelplineDetailSerializer
+    lookup_field = 'id'
+    permission_classes = [AllowAny]
+
+
+class EmergencyHelplinesView(generics.ListAPIView):
+    """List only emergency (24/7) helplines - publicly accessible"""
+    queryset = Helpline.objects.filter(is_emergency=True)
+    serializer_class = HelplineListSerializer
+    ordering = ['-category__priority', 'name']
+    permission_classes = [AllowAny]

@@ -1,9 +1,7 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom';
-// import search from '../assets/Search.svg';
 import m from '../assets/m.svg';
-// import line from '../assets/Line.svg';
-import underline from '../assets/underline.svg';
+
 const Navbar = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
@@ -11,43 +9,55 @@ const Navbar = () => {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
+    const closeDropdown = () => {
+        setIsDropdownOpen(false);
+    };
+
   return (
-    <div className=''>
-        <nav className="flex text-white text-2xl font-bold font-['Inter'] justify-center space-x-10 pt-10 text-front">
-            <Link to="/" className="relative scale-[100%] hover:transition-all hover:scale-[110%] inline-block hover:after:absolute hover:after:block hover:after:w-full hover:after:h-0.5 rounded-[60%] hover:after:bg-red-300 hover:after:mt-0">
+    <div className='w-full'>
+        <nav className="flex text-white text-xl font-bold font-['Inter'] justify-between items-center px-8 pt-8 max-w-[1400px] mx-auto">
+          {/* Left side - Navigation Links */}
+          <div className="flex space-x-6">
+            <Link to="/" className="hover:text-gray-300 transition">
                 HOME
             </Link>
-            <Link to="/forum" className="relative scale-[100%] hover:transition-all hover:scale-[110%] inline-block hover:after:absolute hover:after:block hover:after:w-full hover:after:h-0.5 rounded-[60%] hover:after:bg-red-300 hover:after:mt-2px">
+            <Link to="/forum" className="hover:text-gray-300 transition">
                 FORUM
             </Link>
-            <Link to="/events" className="relative scale-[100%] hover:transition-all hover:scale-[110%] inline-block hover:after:absolute hover:after:block hover:after:w-full hover:after:h-0.5 rounded-[60%] hover:after:bg-red-300 hover:after:mt-2px">
+            <Link to="/events" className="hover:text-gray-300 transition">
                 EVENTS
             </Link>
-            <Link to="/about" className="relative scale-[100%] hover:transition-all hover:scale-[110%] inline-block hover:after:absolute hover:after:block hover:after:w-full hover:after:h-0.5 rounded-[60%] hover:after:bg-red-300 hover:after:mt-2px">
-                ABOUT
-            </Link>
-            <Link to="/tourism" className="relative scale-[100%] hover:transition-all hover:scale-[110%] inline-block hover:after:absolute hover:after:block hover:after:w-full hover:after:h-0.5 rounded-[60%] hover:after:bg-red-300 hover:after:mt-2px">
+            <Link to="/tourism" className="hover:text-gray-300 transition">
                 TOURISM
             </Link>
-            <div className="absolute right-6 mt-[-0.5rem]">
-              <a className="" onClick={toggleDropdown}>
-                <div className="focus:outline-none">
-                  <img src={m} alt="Profile" className="scale-[100%] hover:scale-[110%] right-0 hover:right-1 hover:transition-all"style={{ position: "relative"}} />
-                </div>
-              </a>
-          {isDropdownOpen && (
-            <div className="absolute right-0 mt-2 bg-white rounded shadow-md">
-            <ul className="py-1">
-              <li>
-                <Link to="/signup" className="block px-4 py-2 text-gray-800 hover:bg-gray-200">Signup</Link>
-              </li>
-              <li>
-                <Link to="/login" className="block px-4 py-2 text-gray-800 hover:bg-gray-200">Login</Link>
-              </li>
-            </ul>
+            <Link to="/helpline" className="hover:text-gray-300 transition">
+                HELPLINE
+            </Link>
+            <Link to="/about" className="hover:text-gray-300 transition">
+                ABOUT
+            </Link>
           </div>
-          )}
-        </div>
+
+          {/* Right side - Profile Menu */}
+          <div className="relative">
+            <div className="cursor-pointer" onClick={toggleDropdown}>
+              <button className="focus:outline-none">
+                <img src={m} alt="Profile" className="w-8 h-8" />
+              </button>
+            </div>
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 bg-white rounded shadow-md w-32 z-50">
+                <ul className="py-1">
+                  <li>
+                    <Link to="/signup" className="block px-4 py-2 text-gray-800 hover:bg-gray-200" onClick={closeDropdown}>Signup</Link>
+                  </li>
+                  <li>
+                    <Link to="/login" className="block px-4 py-2 text-gray-800 hover:bg-gray-200" onClick={closeDropdown}>Login</Link>
+                  </li>
+                </ul>
+              </div>
+            )}
+          </div>
         </nav>
       </div>
   )

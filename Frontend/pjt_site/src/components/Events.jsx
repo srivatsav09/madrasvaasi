@@ -47,8 +47,8 @@
 
 // export default Events
 
-import React, { useState, useEffect } from 'react';
-import Navbar from './Navbar'; // Import your Navbar component
+import { useState, useEffect } from 'react';
+import Navbar from './Navbar';
 import axios from 'axios';
 import './style.css';
 import bgevents from '../assets/pic2.jpg'
@@ -56,25 +56,33 @@ import { useAuth } from '../AuthContext';
 
 const Events = () => {
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const { token } = useAuth()
 
   useEffect(() => {
-    // Fetch data from Django API when the component mounts
     const fetchData = async () => {
       try {
+        setLoading(true);
+        setError(null);
         const response = await axios.get('http://127.0.0.1:8000/api/events/', {
           headers: {
-            Authorization: `Bearer ${token}` // Set Authorization header with Bearer token
+            Authorization: `Bearer ${token}`
           }
         });
         setEvents(response.data);
       } catch (error) {
         console.error('Error fetching data:', error);
+        setError('Failed to load events. Please try again.');
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchData();
-  }, []); // Empty dependency array ensures the effect runs only once on mount
+    if (token) {
+      fetchData();
+    }
+  }, [token]);
 
   return (
     <div className="outer-bg min-h-screen overflow-hidden">
@@ -82,6 +90,22 @@ const Events = () => {
         <Navbar />
         <div className="w-[901px] text-white text-[120px] pl-[3rem] pt-[3rem] font-extrabold font-['League Spartan']">TRENDING EVENTS</div>
         <div className="w-[991px] h-[0px] border-2 border-white ml-[3rem]" />
+
+        {/* Error Message */}
+        {error && (
+          <div className="mt-8 mx-12 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg">
+            {error}
+            <button onClick={() => setError(null)} className="ml-4 font-bold">✕</button>
+          </div>
+        )}
+
+        {/* Loading Indicator */}
+        {loading && (
+          <div className="mt-20 flex justify-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+          </div>
+        )}
+
         <div className="mt-8 flex justify-center items-center flex-col overflow-hidden max-h-[70vh]">
           <div className="overflow-y-auto custom-scrollbar" style={{ textAlign: 'left' }}>
             {events.map((event) => {

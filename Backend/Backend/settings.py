@@ -11,22 +11,25 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environment variables from .env file
+load_dotenv(BASE_DIR / '.env')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-9wj$p5eh+3-y+3p9asa(&_k#6@k__^r0r!-bgxunt6c))8kady"
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-fallback-key-change-this')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost').split(',')
 
 
 INSTALLED_APPS = [
@@ -41,7 +44,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework.authtoken",
     "events",
-    "drf_yasg"
+    "drf_yasg",
+    "django_filters",
 ]
 
 REST_FRAMEWORK = {
@@ -137,14 +141,17 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS Settings - more secure than allowing all origins
+CORS_ALLOWED_ORIGINS = os.getenv(
+    'CORS_ALLOWED_ORIGINS',
+    'http://127.0.0.1:5173,http://localhost:5173'
+).split(',')
 CORS_ALLOW_CREDENTIALS = True
 
-
-CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1:5173",
-    "http://127.0.0.1",
-]
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    'CORS_ALLOWED_ORIGINS',
+    'http://127.0.0.1:5173,http://localhost:5173'
+).split(',')
 
 SWAGGER_SETTINGS = {
     "USE_SESSION_AUTH": True,

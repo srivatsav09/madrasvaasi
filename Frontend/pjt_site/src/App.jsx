@@ -37,7 +37,7 @@
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './AuthContext'; // Import the AuthProvider
+import { AuthProvider } from './AuthContext';
 import Homepage from './components/Homepage';
 import Signup from './components/signup';
 import Login from './components/login';
@@ -45,16 +45,17 @@ import Events from './components/Events';
 import Forum from './components/Forum';
 import PrivateRoute from './PrivateRoute'
 import Tourism from './components/Tourism';
+import Helpline from './components/Helpline';
 
 const App = () => {
   return (
-    <AuthProvider> {/* Wrap your entire app with AuthProvider */}
+    <AuthProvider>
       <Router>
         <Routes>
           <Route path="/signup" element={<Signup />} />
           <Route path="/" element={<Homepage />} />
           <Route path="/login" element={<Login />} />
-          <Route path='/tourism' element={<Tourism/>}/>
+          <Route path='/helpline' element={<Helpline/>}/>
           <Route element={<PrivateRoute/>}>
             
             <Route path='/forum' element={<Forum/>}/>
